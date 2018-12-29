@@ -1,5 +1,5 @@
-MQ PHP HTTP SDK
-===============
+MQ Python HTTP SDK
+==================
 
 Alyun MQ Documents: http://www.aliyun.com/product/ons
 
