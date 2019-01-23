@@ -13,7 +13,7 @@ Python version: [2.5,3.0)
 2. install sdk by pip
 
 ```bash
-pip insall mq_http_sdk
+pip install mq_http_sdk
 ```
 ## Notice
 

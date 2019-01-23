@@ -19,7 +19,7 @@ Install sdk by pip
 
 .. code:: bash
 
-   pip insall mq_http_sdk
+   pip install mq_http_sdk
 
 Notice
 ------
