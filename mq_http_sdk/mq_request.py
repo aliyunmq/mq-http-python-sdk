@@ -20,11 +20,12 @@ class ResponseBase:
 
 
 class PublishMessageRequest(RequestBase):
-    def __init__(self, instance_id, topic_name, message_body, message_tag=""):
+    def __init__(self, instance_id, topic_name, message_body, message_tag="", properties=""):
         RequestBase.__init__(self, instance_id)
         self.topic_name = topic_name
         self.message_body = message_body
         self.message_tag = message_tag
+        self.properties = properties
         self.method = "POST"
 
 
@@ -33,6 +34,7 @@ class PublishMessageResponse(ResponseBase):
         ResponseBase.__init__(self)
         self.message_id = ""
         self.message_body_md5 = ""
+        self.receipt_handle = ""
 
 
 class ConsumeMessageRequest(RequestBase):
@@ -44,6 +46,10 @@ class ConsumeMessageRequest(RequestBase):
         self.message_tag = message_tag
         self.wait_seconds = wait_seconds
         self.method = "GET"
+        self.trans = ""
+
+    def set_trans_pop(self):
+        self.trans = "pop"
 
 
 class ConsumeMessageResponseEntry:
@@ -57,6 +63,7 @@ class ConsumeMessageResponseEntry:
         self.next_consume_time = ""
         self.receipt_handle = ""
         self.message_tag = ""
+        self.properties = ""
 
 
 class ConsumeMessageResponse(ResponseBase):
@@ -72,6 +79,13 @@ class AckMessageRequest(RequestBase):
         self.consumer = consumer
         self.receipt_handle_list = receipt_handle_list
         self.method = "DELETE"
+        self.trans = ""
+
+    def set_trans_commit(self):
+        self.trans = "commit"
+
+    def set_trans_rollback(self):
+        self.trans = "rollback"
 
 
 class AckMessageResponse(ResponseBase):

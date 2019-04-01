@@ -1,6 +1,7 @@
 # coding=utf-8
 
-from mq_request import ConsumeMessageRequest, ConsumeMessageResponse, AckMessageRequest, AckMessageResponse
+from mq_request import *
+from mq_tool import *
 
 try:
     import json
@@ -81,13 +82,14 @@ class MQConsumer:
             msg.next_consume_time = entry.next_consume_time
             msg.receipt_handle = entry.receipt_handle
             msg.message_tag = entry.message_tag
+            msg.properties = MQUtils.string_to_map(entry.properties)
             msg_list.append(msg)
         return msg_list
 
 
 class Message:
     def __init__(self):
-        """ 消息属性
+        """ 消息
             :: message_body         消息体
             :: message_id           消息编号
             :: message_body_md5     消息体的MD5值
@@ -96,6 +98,7 @@ class Message:
             :: first_consume_time   消息第一次被消费的时间，单位：毫秒
             :: receipt_handle       下次删除的临时句柄，next_consume_time之前有效
             :: next_consume_time    消息下次可消费时间
+            :: properties           消息的属性
         """
         self.message_body = ""
         self.message_tag = None
@@ -109,3 +112,28 @@ class Message:
 
         self.receipt_handle = ""
         self.next_consume_time = 1
+
+        self.properties = {}
+
+    def get_message_key(self):
+        return self.get_property("KEYS")
+
+    def get_start_deliver_time(self):
+        v = self.get_property("__STARTDELIVERTIME")
+        if v == "":
+            return 0
+
+        return long(v)
+
+    def get_trans_check_immunity_time(self):
+        v = self.get_property("__TransCheckT")
+        if v == "":
+            return 0
+
+        return int(v)
+
+    def get_property(self, key):
+        if key in self.properties:
+            return self.properties[key]
+
+        return ""

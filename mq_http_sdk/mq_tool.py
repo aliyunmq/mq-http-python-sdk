@@ -48,19 +48,19 @@ class ValidatorBase:
                     type(item), item, valid_type))
             else:
                 raise MQClientParameterException("TypeInvalid",
-                                                  "Param '%s' in bad type: '%s', '%s' expect type '%s'." % (
-                                                      param_name, type(item), item, valid_type))
+                                                 "Param '%s' in bad type: '%s', '%s' expect type '%s'." % (
+                                                     param_name, type(item), item, valid_type))
 
     @staticmethod
     def is_str(item, param_name=None):
         if not isinstance(item, basestring):
             if param_name is None:
                 raise MQClientParameterException("TypeInvalid",
-                                                  "Bad type: '%s', '%s' expect basestring." % (type(item), item))
+                                                 "Bad type: '%s', '%s' expect basestring." % (type(item), item))
             else:
                 raise MQClientParameterException("TypeInvalid",
-                                                  "Param '%s' in bad type: '%s', '%s' expect basestring." % (
-                                                      param_name, type(item), item))
+                                                 "Param '%s' in bad type: '%s', '%s' expect basestring." % (
+                                                     param_name, type(item), item))
 
     @staticmethod
     def name_validate(name, nameType):
@@ -70,8 +70,8 @@ class ValidatorBase:
         # length
         if len(name) < 1:
             raise MQClientParameterException("NameInvalid",
-                                              "Bad value: '%s', the length of %s should larger than 1." % (
-                                                  name, nameType))
+                                             "Bad value: '%s', the length of %s should larger than 1." % (
+                                                 name, nameType))
 
 
 class MessageValidator(ValidatorBase):
@@ -89,19 +89,19 @@ class MessageValidator(ValidatorBase):
     def waitseconds_validate(wait_seconds):
         if wait_seconds != -1 and wait_seconds < 0:
             raise MQClientParameterException("WaitSecondsInvalid",
-                                              "Bad value: '%d', wait_seconds should larger than 0." % wait_seconds)
+                                             "Bad value: '%d', wait_seconds should larger than 0." % wait_seconds)
 
     @staticmethod
     def consume_tag_validate(message_tag):
         if len(message_tag) > 16:
             raise MQClientParameterException("ConsumeTagInvalid",
-                                              "The length of message tag should be between 1 and 16.")
+                                             "The length of message tag should be between 1 and 16.")
 
     @staticmethod
     def batchsize_validate(batch_size):
         if batch_size != -1 and batch_size < 0:
             raise MQClientParameterException("BatchSizeInvalid",
-                                              "Bad value: '%d', batch_size should larger than 0." % batch_size)
+                                             "Bad value: '%d', batch_size should larger than 0." % batch_size)
 
     @staticmethod
     def publishmessage_attr_validate(req):
@@ -113,7 +113,7 @@ class MessageValidator(ValidatorBase):
             raise MQClientParameterException("MessageBodyInvalid", "Bad value: '', message body should not be ''.")
         if len(req.message_tag) > 16:
             raise MQClientParameterException("MessageTagInvalid",
-                                              "The length of message tag should be between 1 and 16.")
+                                             "The length of message tag should be between 1 and 16.")
 
 
 class ConsumeMessageValidator(MessageValidator):
@@ -144,3 +144,44 @@ class PublishMessageValidator(MessageValidator):
         MessageValidator.validate(req)
         ValidatorBase.name_validate(req.topic_name, "topic_name")
         MessageValidator.publishmessage_attr_validate(req)
+
+
+class MQUtils:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def check_property(prop):
+        if ":" in prop or "|" in prop or "\"" in prop or "&" in prop or "'" in prop or "<" in prop or ">" in prop:
+            return False
+
+        return True
+
+    @staticmethod
+    def map_to_string(properties):
+        if properties is None:
+            return ""
+        ret = ""
+        for key, value in properties.items():
+            if MQUtils.check_property(key) is False or MQUtils.check_property(value) is False:
+                raise MQClientParameterException("MessagePropertyInvalid", "Message's property['%s':'%s'] ] can't "
+                                                                           "contains: & \" ' < > : |" % (key, value))
+            ret += key + ":" + value + "|"
+        return ret
+
+    @staticmethod
+    def string_to_map(property_str):
+        if property_str is None or property_str == "":
+            return {}
+
+        kv_array = property_str.split("|")
+        properties = {}
+        for kv in kv_array:
+            if kv is None or kv == "" or ":" not in kv:
+                continue
+            k_and_v = kv.split(":")
+            if len(k_and_v) != 2:
+                continue
+            if k_and_v[0] != "" and k_and_v[1] != "":
+                properties[str(k_and_v[0])] = str(k_and_v[1])
+        return properties

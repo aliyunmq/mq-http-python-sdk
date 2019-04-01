@@ -10,7 +10,7 @@ from mq_xml_handler import *
 from mq_tool import *
 from mq_http import *
 from mq_consumer import MQConsumer
-from mq_producer import MQProducer
+from mq_producer import MQProducer, MQTransProducer
 
 URI_SEC_MESSAGE = "messages"
 URI_SEC_TOPIC = "topics"
@@ -78,6 +78,22 @@ class MQClient:
         """
         return MQProducer(instance_id, topic_name, self, self.debug)
 
+    def get_trans_producer(self, instance_id, topic_name, group_id):
+        """ 获取MQClient的一个事务发送者(MQTransProducer)对象
+            @type instance_id: string
+            @param instance_id: 实例ID
+
+            @type topic_name: string
+            @param topic_name: topic名字
+
+            @type group_id: string
+            @param group_id: 控制台申请的group id
+
+            @rtype: MQTransProducer object
+            @return: 返回该MQClient的一个事务发送者(MQTransProducer)对象
+        """
+        return MQTransProducer(instance_id, topic_name, group_id, self, self.debug)
+
     def set_log_level(self, log_level):
         if self.logger:
             MQLogger.validate_loglevel(log_level)
@@ -109,6 +125,8 @@ class MQClient:
             req_url += "&waitseconds=%s" % req.wait_seconds
         if req.message_tag != "":
             req_url += "&tag=%s" % req.message_tag
+        if req.trans != "":
+            req_url += "&trans=%s" % req.trans
 
         req_inter = RequestInternal(req.method, req_url)
         self.build_header(req, req_inter)
@@ -139,6 +157,8 @@ class MQClient:
         req_url = "/%s/%s/%s?consumer=%s" % (URI_SEC_TOPIC, req.topic_name, URI_SEC_MESSAGE, req.consumer)
         if req.instance_id != "":
             req_url += "&ns=%s" % req.instance_id
+        if req.trans != "":
+            req_url += "&trans=%s" % req.trans
 
         req_inter = RequestInternal(req.method, req_url)
         req_inter.data = ReceiptHandlesEncoder.encode(req.receipt_handle_list)
@@ -176,7 +196,7 @@ class MQClient:
         resp.header = resp_inter.header
         self.check_status(resp_inter, resp)
         if resp.error_data == "":
-            resp.message_id, resp.message_body_md5 = PublishMessageDecoder.decode(resp_inter.data,
+            resp.message_id, resp.message_body_md5, resp.receipt_handle = PublishMessageDecoder.decode(resp_inter.data,
                                                                                   resp.get_req_id())
             if self.logger:
                 self.logger.info("PublishMessage RequestId:%s TopicName:%s MessageId:%s MessageBodyMD5:%s" % \

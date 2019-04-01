@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import sys
 import xml.dom.minidom
 import string
 import types
@@ -68,6 +67,7 @@ class TopicMessageEncoder:
         msgbody = req.message_body.decode('utf-8') if isinstance(req.message_body, str) else req.message_body
         EncoderBase.insert_if_valid("MessageBody", msgbody, "", message)
         EncoderBase.insert_if_valid("MessageTag", req.message_tag, "", message)
+        EncoderBase.insert_if_valid("Properties", req.properties, "", message)
         return EncoderBase.dic_to_xml("Message", message)
 
 
@@ -144,6 +144,8 @@ class ConsumeMessageDecoder(DecoderBase):
                 msg.receipt_handle = data_dic["ReceiptHandle"]
                 if "MessageTag" in data_dic:
                     msg.message_tag = data_dic["MessageTag"]
+                if "Properties" in data_dic:
+                    msg.properties = data_dic["Properties"]
                 message_list.append(msg)
         except Exception, e:
             raise MQClientNetworkException("RespDataDamaged", xml_data, req_id)
@@ -181,7 +183,11 @@ class PublishMessageDecoder(DecoderBase):
         for key in key_list:
             if key not in data_dic.keys():
                 raise MQClientNetworkException("RespDataDamaged", xml_data, req_id)
-        return data_dic["MessageId"], data_dic["MessageBodyMD5"]
+
+        if "ReceiptHandle" in data_dic:
+            return data_dic["MessageId"], data_dic["MessageBodyMD5"], data_dic["ReceiptHandle"]
+
+        return data_dic["MessageId"], data_dic["MessageBodyMD5"], ""
 
 
 class ErrorDecoder(DecoderBase):
