@@ -1,13 +1,13 @@
 # coding=utf-8
 
-from mq_request import *
-from mq_tool import *
-from mq_exception import *
-from mq_consumer import Message
+from .mq_request import *
+from .mq_tool import *
+from .mq_exception import *
+from .mq_consumer import Message
 
 try:
     import json
-except ImportError, e:
+except ImportError as e:
     import simplejson as json
 
 
@@ -48,9 +48,9 @@ class MQProducer:
 
     def debuginfo(self, resp):
         if self.debug:
-            print "===================DEBUG INFO==================="
-            print "RequestId: %s" % resp.header["x-mq-request-id"]
-            print "================================================"
+            print("===================DEBUG INFO===================")
+            print("RequestId: %s" % resp.header["x-mq-request-id"])
+            print("================================================")
 
     def __publish_resp2msg__(self, resp):
         msg = TopicMessage()
@@ -109,7 +109,7 @@ class TopicMessage:
         """
         self.properties["__STARTDELIVERTIME"] = str(time_in_millis)
 
-    def set_property(self, key, value):
+    def put_property(self, key, value):
         """ 设置消息的属性
             @type key: str
             @param key: 属性键

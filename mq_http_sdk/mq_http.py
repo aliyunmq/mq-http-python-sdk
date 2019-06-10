@@ -1,8 +1,12 @@
 # coding=utf-8
 
 import socket
-from httplib import HTTPConnection, BadStatusLine, HTTPSConnection
-from mq_exception import *
+import sys
+from .mq_exception import *
+if sys.version > '3':
+    from http.client import HTTPConnection, BadStatusLine, HTTPSConnection
+else:
+    from httplib import HTTPConnection, BadStatusLine, HTTPSConnection
 
 
 class MQHTTPConnection(HTTPConnection):
@@ -28,19 +32,18 @@ class MQHTTPConnection(HTTPConnection):
                 self.sock = socket.socket(af, socktype, proto)
                 self.sock.settimeout(self.connection_timeout)
                 if self.debuglevel > 0:
-                    print "connect: (%s, %s)" % (self.host, self.port)
+                    print("connect: (%s, %s)" % (self.host, self.port))
                 self.sock.connect(sa)
-            except socket.error, msg:
+            except socket.error as msg:
                 if self.debuglevel > 0:
-                    print 'connect fail:', (self.host, self.port)
+                    print('connect fail:', (self.host, self.port))
                 if self.sock:
                     self.sock.close()
                 self.sock = None
                 continue
             break
         if not self.sock:
-            raise socket.error, msg
-
+            raise socket.error(msg)
 
 class MQHTTPSConnection(HTTPSConnection):
     def __init__(self, host, port=None, strict=None):
@@ -116,7 +119,7 @@ class MQHttp:
             if self.logger:
                 self.logger.debug("GetResponse %s" % resp_inter)
             return resp_inter
-        except Exception, e:
+        except Exception as e:
             self.conn.close()
             raise MQClientNetworkException("NetWorkException", str(e))  # raise netException
 
@@ -132,7 +135,7 @@ class RequestInternal:
 
     def __str__(self):
         return "Method: %s\nUri: %s\nHeader: %s\nData: %s\n" % \
-               (self.method, self.uri, "\n".join(["%s: %s" % (k, v) for k, v in self.header.items()]), self.data)
+               (self.method, self.uri, "\n".join(["%s: %s" % (k, v) for k, v in list(self.header.items())]), self.data)
 
 
 class ResponseInternal:
@@ -145,4 +148,4 @@ class ResponseInternal:
 
     def __str__(self):
         return "Status: %s\nHeader: %s\nData: %s\n" % \
-               (self.status, "\n".join(["%s: %s" % (k, v) for k, v in self.header.items()]), self.data)
+               (self.status, "\n".join(["%s: %s" % (k, v) for k, v in list(self.header.items())]), self.data)

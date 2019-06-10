@@ -5,7 +5,9 @@ Aliyun MQ Console: https://ons.console.aliyun.com
 
 ## Requires
 
-Python version: [2.5,3.0)
+Python version(=v1.0.0): [2.5, 3.0)
+
+Python version(>v1.0.0): [2.5, ~)
 
 ## Install sdk by pip
 
@@ -21,6 +23,14 @@ MQClient, Producer, Consumer are not thread safe, please use multi instance in m
 
 ## Samples
 
+### V1.0.0 Samples
 [Publish Message](https://github.com/aliyunmq/mq-http-samples/blob/master/python/producer.py)
 
 [Consume Message](https://github.com/aliyunmq/mq-http-samples/blob/master/python/consumer.py)
+
+### V1.0.1 Samples
+[Publish Message](https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/producer.py)
+
+[Consume Message](https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/consumer.py)
+
+[Transaction Message](https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/trans_producer.py)

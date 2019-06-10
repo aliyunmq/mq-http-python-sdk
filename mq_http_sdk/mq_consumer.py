@@ -1,12 +1,7 @@
 # coding=utf-8
 
-from mq_request import *
-from mq_tool import *
-
-try:
-    import json
-except ImportError, e:
-    import simplejson as json
+from .mq_request import *
+from .mq_tool import *
 
 
 class MQConsumer:
@@ -65,9 +60,9 @@ class MQConsumer:
 
     def debuginfo(self, resp):
         if self.debug:
-            print "===================DEBUG INFO==================="
-            print "RequestId: %s" % resp.header["x-mq-request-id"]
-            print "================================================"
+            print("===================DEBUG INFO===================")
+            print("RequestId: %s" % resp.header["x-mq-request-id"])
+            print("================================================")
 
     def __batchrecv_resp2msg__(self, resp):
         msg_list = []
@@ -123,7 +118,7 @@ class Message:
         if v == "":
             return 0
 
-        return long(v)
+        return int(v)
 
     def get_trans_check_immunity_time(self):
         v = self.get_property("__TransCheckT")

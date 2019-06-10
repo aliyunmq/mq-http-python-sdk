@@ -3,7 +3,7 @@
 import os
 import logging
 import logging.handlers
-from mq_exception import *
+from .mq_exception import *
 
 METHODS = ["PUT", "POST", "GET", "DELETE"]
 
@@ -53,7 +53,7 @@ class ValidatorBase:
 
     @staticmethod
     def is_str(item, param_name=None):
-        if not isinstance(item, basestring):
+        if not isinstance(item, str):
             if param_name is None:
                 raise MQClientParameterException("TypeInvalid",
                                                  "Bad type: '%s', '%s' expect basestring." % (type(item), item))
@@ -162,7 +162,7 @@ class MQUtils:
         if properties is None:
             return ""
         ret = ""
-        for key, value in properties.items():
+        for key, value in list(properties.items()):
             if MQUtils.check_property(key) is False or MQUtils.check_property(value) is False:
                 raise MQClientParameterException("MessagePropertyInvalid", "Message's property['%s':'%s'] ] can't "
                                                                            "contains: & \" ' < > : |" % (key, value))
@@ -179,9 +179,12 @@ class MQUtils:
         for kv in kv_array:
             if kv is None or kv == "" or ":" not in kv:
                 continue
-            k_and_v = kv.split(":")
+            k_and_v = list(kv.split(":"))
             if len(k_and_v) != 2:
                 continue
             if k_and_v[0] != "" and k_and_v[1] != "":
-                properties[str(k_and_v[0])] = str(k_and_v[1])
+                try:
+                    properties[str(k_and_v[0])] = str(k_and_v[1])
+                except UnicodeEncodeError:
+                    properties[k_and_v[0].encode('utf-8')] = k_and_v[1].encode('utf-8')
         return properties

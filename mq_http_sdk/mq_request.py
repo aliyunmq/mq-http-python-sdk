@@ -1,5 +1,6 @@
 # coding=utf-8
 
+
 class RequestBase:
     def __init__(self, instance_id):
         self.method = ""
