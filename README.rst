@@ -52,3 +52,6 @@ Message <https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/consume
 
 `Transaction
 Message <https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/trans_producer.py>`__
+
+Note for 1.0.1: Http consumer only support timer msg(less than 3 days),
+no matter the msg is produced from http or tcp protocal.
