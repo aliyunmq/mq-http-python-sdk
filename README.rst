@@ -1,7 +1,7 @@
 MQ Python HTTP SDK
 ==================
 
-Alyun MQ Documents: http://www.aliyun.com/product/ons
+Aliyun MQ Documents: http://www.aliyun.com/product/ons
 
 Aliyun MQ Console: https://ons.console.aliyun.com
 
@@ -53,5 +53,23 @@ Message <https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/consume
 `Transaction
 Message <https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/trans_producer.py>`__
 
-Note for 1.0.1: Http consumer only support timer msg(less than 3 days),
-no matter the msg is produced from http or tcp protocal.
+V1.0.3 Samples
+~~~~~~~~~~~~~~
+
+`Publish
+Message <https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/producer.py>`__
+
+`Consume
+Message <https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/consumer.py>`__
+
+`Transaction
+Message <https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/trans_producer.py>`__
+
+`Publish Order
+Message <https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/order_producer.py>`__
+
+`Consume Order
+Message <https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/order_consumer.py>`__
+
+Note: Http consumer only support timer msg(less than 3 days), no matter
+the msg is produced from http or tcp protocol.
