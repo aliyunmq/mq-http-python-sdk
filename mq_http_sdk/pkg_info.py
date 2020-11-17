@@ -1,5 +1,5 @@
 name = "mq_http_sdk"
-version = "1.0.1"
+version = "1.0.2"
 url = "https://github.com/aliyunmq/mq-http-python-sdk"
 license = "MIT"
 short_description = "Aliyun Message Queue(MQ) Http Python SDK"

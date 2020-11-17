@@ -93,9 +93,9 @@ class MessageValidator(ValidatorBase):
 
     @staticmethod
     def consume_tag_validate(message_tag):
-        if len(message_tag) > 16:
+        if len(message_tag) > 64:
             raise MQClientParameterException("ConsumeTagInvalid",
-                                             "The length of message tag should be between 1 and 16.")
+                                             "The length of message tag should be between 1 and 64.")
 
     @staticmethod
     def batchsize_validate(batch_size):
@@ -111,9 +111,9 @@ class MessageValidator(ValidatorBase):
         # value
         if req.message_body == "":
             raise MQClientParameterException("MessageBodyInvalid", "Bad value: '', message body should not be ''.")
-        if len(req.message_tag) > 16:
+        if len(req.message_tag) > 64:
             raise MQClientParameterException("MessageTagInvalid",
-                                             "The length of message tag should be between 1 and 16.")
+                                             "The length of message tag should be between 1 and 64.")
 
 
 class ConsumeMessageValidator(MessageValidator):
