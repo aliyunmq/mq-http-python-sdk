@@ -109,6 +109,14 @@ class TopicMessage:
         """
         self.properties["__STARTDELIVERTIME"] = str(time_in_millis)
 
+    def set_sharding_key(self, sharding_key):
+        """ 分区顺序消息中区分不同分区的关键字段，sharding key 于普通消息的 key 是完全不同的概念。
+            全局顺序消息，该字段可以设置为任意非空字符串。
+            @type sharding_key: str
+            @param sharding_key: 分区消息键值
+        """
+        self.properties["__SHARDINGKEY"] = sharding_key
+
     def put_property(self, key, value):
         """ 设置消息的属性
             @type key: str

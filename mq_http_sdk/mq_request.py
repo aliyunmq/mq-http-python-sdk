@@ -52,6 +52,9 @@ class ConsumeMessageRequest(RequestBase):
     def set_trans_pop(self):
         self.trans = "pop"
 
+    def set_order(self):
+        self.trans = "order"
+
 
 class ConsumeMessageResponseEntry:
     def __init__(self):
