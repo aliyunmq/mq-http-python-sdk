@@ -21,29 +21,30 @@ pip install mq_http_sdk
 
 MQClient, Producer, Consumer are not thread safe, please use multi instance in mutli thread.
 
-## Samples
+## Note
+1. Http consumer only support timer msg (less than 3 days), no matter the msg is produced from http or tcp protocol.
+2. Order is only supported at special server cluster.
 
-### V1.0.0 Samples
+## Samples (github)
+
 [Publish Message](https://github.com/aliyunmq/mq-http-samples/blob/master/python/producer.py)
 
 [Consume Message](https://github.com/aliyunmq/mq-http-samples/blob/master/python/consumer.py)
 
-### V1.0.1 Samples
-[Publish Message](https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/producer.py)
+[Transaction Message](https://github.com/aliyunmq/mq-http-samples/blob/master/python/trans_producer.py)
 
-[Consume Message](https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/consumer.py)
+[Publish Order Message](https://github.com/aliyunmq/mq-http-samples/blob/master/python/order_producer.py)
 
-[Transaction Message](https://github.com/aliyunmq/mq-http-samples/tree/101-dev/python/trans_producer.py)
+[Consume Order Message](https://github.com/aliyunmq/mq-http-samples/blob/master/python/order_consumer.py)
 
-### V1.0.3 Samples
-[Publish Message](https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/producer.py)
+## Samples (code.aliyun.com)
 
-[Consume Message](https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/consumer.py)
+[Publish Message](https://code.aliyun.com/aliware_rocketmq/mq-http-samples/blob/master/python/producer.py)
 
-[Transaction Message](https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/trans_producer.py)
+[Consume Message](https://code.aliyun.com/aliware_rocketmq/mq-http-samples/blob/master/python/consumer.py)
 
-[Publish Order Message](https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/order_producer.py)
+[Transaction Message](https://code.aliyun.com/aliware_rocketmq/mq-http-samples/blob/master/python/trans_producer.py)
 
-[Consume Order Message](https://github.com/aliyunmq/mq-http-samples/tree/103-dev/python/order_consumer.py)
+[Publish Order Message](https://code.aliyun.com/aliware_rocketmq/mq-http-samples/blob/master/python/order_producer.py)
 
-Note: Http consumer only support timer msg(less than 3 days), no matter the msg is produced from http or tcp protocol.
+[Consume Order Message](https://code.aliyun.com/aliware_rocketmq/mq-http-samples/blob/master/python/order_consumer.py)
