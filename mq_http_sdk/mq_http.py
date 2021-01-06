@@ -11,7 +11,10 @@ else:
 
 class MQHTTPConnection(HTTPConnection):
     def __init__(self, host, port=None, strict=None, connection_timeout=60):
-        HTTPConnection.__init__(self, host, port, strict)
+        if sys.version < "3.4":
+            HTTPConnection.__init__(self, host, port, strict)
+        else:
+            HTTPConnection.__init__(self, host, port)
         self.request_length = 0
         self.connection_timeout = connection_timeout
 
@@ -45,9 +48,13 @@ class MQHTTPConnection(HTTPConnection):
         if not self.sock:
             raise socket.error(msg)
 
+
 class MQHTTPSConnection(HTTPSConnection):
     def __init__(self, host, port=None, strict=None):
-        HTTPSConnection.__init__(self, host, port, strict=strict)
+        if sys.version < "3.4":
+            HTTPSConnection.__init__(self, host, port, strict=strict)
+        else:
+            HTTPConnection.__init__(self, host, port)
         self.request_length = 0
 
     def send(self, str):
