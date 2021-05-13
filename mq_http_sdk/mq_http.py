@@ -34,7 +34,8 @@ class MQHTTPConnection(HTTPConnection):
                 if self.debuglevel > 0:
                     print("connect: (%s, %s)" % (self.host, self.port))
                 self.sock.connect(sa)
-            except socket.error as msg:
+            except socket.error as e:
+                msg = e
                 if self.debuglevel > 0:
                     print('connect fail:', (self.host, self.port))
                 if self.sock:
