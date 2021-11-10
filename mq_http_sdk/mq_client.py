@@ -1,11 +1,11 @@
 # coding=utf-8
 
 import base64
-import time
 import hashlib
 import hmac
 import platform
 from email.utils import formatdate
+
 from . import pkg_info
 from .mq_xml_handler import *
 from .mq_tool import *
