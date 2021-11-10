@@ -1,10 +1,11 @@
 # coding=utf-8
 
 import base64
-import time
 import hashlib
 import hmac
 import platform
+from email.utils import formatdate
+
 from . import pkg_info
 from .mq_xml_handler import *
 from .mq_tool import *
@@ -211,7 +212,7 @@ class MQClient:
             req_inter.header["content-type"] = "text/xml;charset=UTF-8"
         req_inter.header["x-mq-version"] = self.version
         req_inter.header["host"] = self.host
-        req_inter.header["date"] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+        req_inter.header["date"] = formatdate(usegmt=True)
         req_inter.header["user-agent"] = "mq-python-sdk/%s(%s/%s;%s)" % \
                                          (pkg_info.version, platform.system(), platform.release(),
                                           platform.python_version())
