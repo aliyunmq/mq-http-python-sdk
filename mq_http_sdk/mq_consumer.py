@@ -1,6 +1,8 @@
 # coding=utf-8
 
 import sys
+from contextlib import asynccontextmanager
+
 from .mq_request import *
 from .mq_tool import *
 if sys.version > '3':
@@ -50,6 +52,14 @@ class MQConsumer:
         self.debuginfo(resp)
         return self.__batchrecv_resp2msg__(resp)
 
+    @asynccontextmanager
+    async def start_async_session(self):
+        await self.mq_client.start_async_session()
+        try:
+            yield
+        finally:
+            await self.mq_client.close_async_session()
+
     async def async_consume_message(self, batch_size=1, wait_seconds=-1):
         """ 消费消息
 
@@ -69,7 +79,7 @@ class MQConsumer:
         """
         req = ConsumeMessageRequest(self.instance_id, self.topic_name, self.consumer, batch_size, self.message_tag, wait_seconds)
         resp = ConsumeMessageResponse()
-        await self.mq_client.consume_message(req, resp)
+        await self.mq_client.async_consume_message(req, resp)
         self.debuginfo(resp)
         return self.__batchrecv_resp2msg__(resp)
 
@@ -95,7 +105,7 @@ class MQConsumer:
         req = ConsumeMessageRequest(self.instance_id, self.topic_name, self.consumer, batch_size, self.message_tag, wait_seconds)
         req.set_order()
         resp = ConsumeMessageResponse()
-        await self.mq_client.consume_message(req, resp)
+        self.mq_client.consume_message(req, resp)
         self.debuginfo(resp)
         return self.__batchrecv_resp2msg__(resp)
 
@@ -121,7 +131,7 @@ class MQConsumer:
         req = ConsumeMessageRequest(self.instance_id, self.topic_name, self.consumer, batch_size, self.message_tag, wait_seconds)
         req.set_order()
         resp = ConsumeMessageResponse()
-        await self.mq_client.consume_message(req, resp)
+        await self.mq_client.async_consume_message(req, resp)
         self.debuginfo(resp)
         return self.__batchrecv_resp2msg__(resp)
 
@@ -154,7 +164,7 @@ class MQConsumer:
         """
         req = AckMessageRequest(self.instance_id, self.topic_name, self.consumer, receipt_handle_list)
         resp = AckMessageResponse()
-        await self.mq_client.ack_message(req, resp)
+        await self.mq_client.async_ack_message(req, resp)
         self.debuginfo(resp)
 
     def debuginfo(self, resp):

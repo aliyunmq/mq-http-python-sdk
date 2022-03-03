@@ -114,12 +114,17 @@ class MQClient:
 
     def set_keep_alive(self, keep_alive):
         self.http.set_keep_alive(keep_alive)
-        self.async_http.set_keep_alive(keep_alive)
 
     def close_connection(self):
         self.http.conn.close()
 
-    def async_close_connection(self):
+    async def async_close_connection(self):
+        await self.async_http.conn.close()
+
+    async def start_async_session(self):
+        await self.async_http.conn.renew_session()
+
+    async def close_async_session(self):
         await self.async_http.conn.close()
 
     def consume_message(self, req, resp):
