@@ -48,7 +48,7 @@ class MQProducer:
         return self.__publish_resp2msg__(resp)
 
     @asynccontextmanager
-    async def start_async_session(self):
+    async def async_session(self):
         await self.mq_client.start_async_session()
         try:
             yield
