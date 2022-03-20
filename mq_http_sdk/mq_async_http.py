@@ -50,7 +50,7 @@ class MQHTTPAsyncConnection:
     async def async_request(self, req_inter, timeout) -> ResponseInternal:
         if self.session and not self.session.closed:
             return await self._async_do_action(self.session, req_inter, timeout)
-        async with aiohttp.ClientSession(base_url=f"http://{self.host}", raise_for_status=True) as session:
+        async with aiohttp.ClientSession(base_url=f"http://{self.host}", raise_for_status=False) as session:
             return await self._async_do_action(session, req_inter, timeout)
 
     @staticmethod
@@ -65,7 +65,7 @@ class MQHTTPAsyncConnection:
     async def renew_session(self):
         if self.session and not self.session.closed:
             await self.session.close()
-        self.session = aiohttp.ClientSession(base_url=f"http://{self.host}", raise_for_status=True)
+        self.session = aiohttp.ClientSession(base_url=f"http://{self.host}", raise_for_status=False)
 
     async def close(self):
         if self.session and not self.session.closed:
@@ -84,7 +84,7 @@ class MQHTTPSAsyncConnection:
     async def async_request(self, req_inter, timeout) -> ResponseInternal:
         if self.session and not self.session.closed:
             return await self._async_do_action(self.session, req_inter, timeout)
-        async with aiohttp.ClientSession(base_url=f"https://{self.host}", raise_for_status=True,
+        async with aiohttp.ClientSession(base_url=f"https://{self.host}", raise_for_status=False,
                                          connector=self.connector) as session:
             return await self._async_do_action(session, req_inter, timeout)
 
@@ -100,7 +100,7 @@ class MQHTTPSAsyncConnection:
     async def renew_session(self):
         if self.session and not self.session.closed:
             await self.session.close()
-        self.session = aiohttp.ClientSession(base_url=f"https://{self.host}", raise_for_status=True, connector=self.connector)
+        self.session = aiohttp.ClientSession(base_url=f"https://{self.host}", raise_for_status=False, connector=self.connector)
 
     async def close(self):
         if self.session and not self.session.closed:

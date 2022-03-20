@@ -182,7 +182,7 @@ class MQClient:
         self.build_header(req, req_inter)
 
         # send request
-        resp_inter = await self.http.send_request(req_inter)
+        resp_inter = await self.async_http.send_request(req_inter)
 
         # handle result, make response
         resp.status = resp_inter.status
@@ -241,7 +241,7 @@ class MQClient:
         self.build_header(req, req_inter)
 
         # send request
-        resp_inter = await self.http.send_request(req_inter)
+        resp_inter = await self.async_http.send_request(req_inter)
 
         # handle result, make response
         resp.status = resp_inter.status
@@ -310,6 +310,7 @@ class MQClient:
     def build_header(self, req, req_inter):
         if self.http.is_keep_alive():
             req_inter.header["Connection"] = "Keep-Alive"
+        req_inter.header["content-type"] = ""
         if req_inter.data != "":
             req_inter.header["content-type"] = "text/xml;charset=UTF-8"
         req_inter.header["x-mq-version"] = self.version
