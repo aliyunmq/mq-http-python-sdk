@@ -15,6 +15,7 @@ if sys.version_info <= (2, 5):
 
 setup(name=mq_http_sdk.pkg_info.name,
       version=mq_http_sdk.pkg_info.version,
+      install_requires=["aiohttp>=3.8.1"],
       author="aliyunmq",
       author_email="",
       url=mq_http_sdk.pkg_info.url,

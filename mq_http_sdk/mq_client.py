@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import platform
 from . import pkg_info
+from .mq_async_http import MQAsyncHttp
 from .mq_xml_handler import *
 from .mq_tool import *
 from .mq_http import *
@@ -43,6 +44,7 @@ class MQClient:
         self.logger = logger
         self.debug = debug
         self.http = MQHttp(self.host, logger=logger, is_https=self.is_https)
+        self.async_http = MQAsyncHttp(self.host, logger=logger, is_https=self.is_https)
         if self.logger:
             self.logger.info("InitClient Host:%s Version:%s" % (host, self.version))
 
@@ -99,19 +101,31 @@ class MQClient:
             MQLogger.validate_loglevel(log_level)
             self.logger.setLevel(log_level)
             self.http.set_log_level(log_level)
+            self.async_http.set_log_level(log_level)
 
     def close_log(self):
         self.logger = None
         self.http.close_log()
+        self.async_http.close_log()
 
     def set_connection_timeout(self, connection_timeout):
         self.http.set_connection_timeout(connection_timeout)
+        self.async_http.set_connection_timeout(connection_timeout)
 
     def set_keep_alive(self, keep_alive):
         self.http.set_keep_alive(keep_alive)
 
     def close_connection(self):
         self.http.conn.close()
+
+    async def async_close_connection(self):
+        await self.async_http.conn.close()
+
+    async def start_async_session(self):
+        await self.async_http.conn.renew_session()
+
+    async def close_async_session(self):
+        await self.async_http.conn.close()
 
     def consume_message(self, req, resp):
         # check parameter
@@ -133,6 +147,42 @@ class MQClient:
 
         # send request
         resp_inter = self.http.send_request(req_inter)
+
+        # handle result, make response
+        resp.status = resp_inter.status
+        resp.header = resp_inter.header
+        self.check_status(resp_inter, resp)
+        if resp.error_data == "":
+            resp.message_list = ConsumeMessageDecoder.decode(resp_inter.data, resp.get_req_id())
+            if self.logger:
+                self.logger.info("ConsumeMessage RequestId:%s TopicName:%s WaitSeconds:%s BatchSize:%s Tag:%s MessageCount:%s \
+                    MessagesInfo\n%s" % (
+                    resp.get_req_id(), req.topic_name, req.wait_seconds, req.batch_size, req.message_tag, len(resp.message_list), \
+                    "\n".join([
+                        "MessageId:%s MessageBodyMD5:%s NextConsumeTime:%s ReceiptHandle:%s PublishTime:%s ConsumedTimes:%s" % \
+                        (msg.message_id, msg.message_body_md5, msg.next_consume_time, msg.receipt_handle,
+                         msg.publish_time, msg.consumed_times) for msg in resp.message_list])))
+
+    async def async_consume_message(self, req, resp):
+        # check parameter
+        ConsumeMessageValidator.validate(req)
+
+        # make request internal
+        req_url = "/%s/%s/%s?consumer=%s&numOfMessages=%s" % (URI_SEC_TOPIC, req.topic_name, URI_SEC_MESSAGE, req.consumer, req.batch_size)
+        if req.instance_id != "":
+            req_url += "&ns=%s" % req.instance_id
+        if req.wait_seconds != -1:
+            req_url += "&waitseconds=%s" % req.wait_seconds
+        if req.message_tag != "":
+            req_url += "&tag=%s" % req.message_tag
+        if req.trans != "":
+            req_url += "&trans=%s" % req.trans
+
+        req_inter = RequestInternal(req.method, req_url)
+        self.build_header(req, req_inter)
+
+        # send request
+        resp_inter = await self.async_http.send_request(req_inter)
 
         # handle result, make response
         resp.status = resp_inter.status
@@ -175,6 +225,32 @@ class MQClient:
             self.logger.info("AckMessage RequestId:%s TopicName:%s ReceiptHandles\n%s" % \
                              (resp.get_req_id(), req.topic_name, "\n".join(req.receipt_handle_list)))
 
+    async def async_ack_message(self, req, resp):
+        # check parameter
+        AckMessageValidator.validate(req)
+
+        # make request internal
+        req_url = "/%s/%s/%s?consumer=%s" % (URI_SEC_TOPIC, req.topic_name, URI_SEC_MESSAGE, req.consumer)
+        if req.instance_id != "":
+            req_url += "&ns=%s" % req.instance_id
+        if req.trans != "":
+            req_url += "&trans=%s" % req.trans
+
+        req_inter = RequestInternal(req.method, req_url)
+        req_inter.data = ReceiptHandlesEncoder.encode(req.receipt_handle_list)
+        self.build_header(req, req_inter)
+
+        # send request
+        resp_inter = await self.async_http.send_request(req_inter)
+
+        # handle result, make response
+        resp.status = resp_inter.status
+        resp.header = resp_inter.header
+        self.check_status(resp_inter, resp, AckMessageDecoder)
+        if self.logger:
+            self.logger.info("AckMessage RequestId:%s TopicName:%s ReceiptHandles\n%s" % \
+                             (resp.get_req_id(), req.topic_name, "\n".join(req.receipt_handle_list)))
+
     def publish_message(self, req, resp):
         # check parameter
         PublishMessageValidator.validate(req)
@@ -202,11 +278,39 @@ class MQClient:
                 self.logger.info("PublishMessage RequestId:%s TopicName:%s MessageId:%s MessageBodyMD5:%s" % \
                                  (resp.get_req_id(), req.topic_name, resp.message_id, resp.message_body_md5))
 
+    async def async_publish_message(self, req, resp):
+        # check parameter
+        PublishMessageValidator.validate(req)
+
+        # make request internal
+        req_url = "/%s/%s/%s" % (URI_SEC_TOPIC, req.topic_name, URI_SEC_MESSAGE)
+        if req.instance_id != "":
+            req_url += "?ns=%s" % req.instance_id
+
+        req_inter = RequestInternal(req.method, req_url)
+        req_inter.data = TopicMessageEncoder.encode(req)
+        self.build_header(req, req_inter)
+
+        # send request
+        resp_inter = await self.async_http.send_request(req_inter)
+
+        # handle result, make response
+        resp.status = resp_inter.status
+        resp.header = resp_inter.header
+        self.check_status(resp_inter, resp)
+        if resp.error_data == "":
+            resp.message_id, resp.message_body_md5, resp.receipt_handle = PublishMessageDecoder.decode(resp_inter.data,
+                                                                                  resp.get_req_id())
+            if self.logger:
+                self.logger.info("PublishMessage RequestId:%s TopicName:%s MessageId:%s MessageBodyMD5:%s" % \
+                                 (resp.get_req_id(), req.topic_name, resp.message_id, resp.message_body_md5))
+
     ###################################################################################################
     # ----------------------internal-------------------------------------------------------------------#
     def build_header(self, req, req_inter):
         if self.http.is_keep_alive():
             req_inter.header["Connection"] = "Keep-Alive"
+        req_inter.header["content-type"] = ""
         if req_inter.data != "":
             req_inter.header["content-type"] = "text/xml;charset=UTF-8"
         req_inter.header["x-mq-version"] = self.version

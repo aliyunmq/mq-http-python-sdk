@@ -1,6 +1,8 @@
 # coding=utf-8
 
 import sys
+from contextlib import asynccontextmanager
+
 from .mq_request import *
 from .mq_tool import *
 if sys.version > '3':
@@ -50,6 +52,37 @@ class MQConsumer:
         self.debuginfo(resp)
         return self.__batchrecv_resp2msg__(resp)
 
+    @asynccontextmanager
+    async def async_session(self):
+        await self.mq_client.start_async_session()
+        try:
+            yield
+        finally:
+            await self.mq_client.close_async_session()
+
+    async def async_consume_message(self, batch_size=1, wait_seconds=-1):
+        """ 消费消息
+
+            @type batch_size: int
+            @param batch_size: 本次请求最多获取的消息条数，1~16
+
+            @type wait_seconds: int
+            @param wait_seconds: 本次请求的长轮询时间，单位：秒，1～30
+
+            @rtype: list of Message object
+            @return 多条消息的属性，包含消息的基本属性、下次可消费时间和临时句柄
+
+            @note: Exception
+            :: MQClientParameterException  参数格式异常
+            :: MQClientNetworkException    网络异常
+            :: MQServerException           处理异常
+        """
+        req = ConsumeMessageRequest(self.instance_id, self.topic_name, self.consumer, batch_size, self.message_tag, wait_seconds)
+        resp = ConsumeMessageResponse()
+        await self.mq_client.async_consume_message(req, resp)
+        self.debuginfo(resp)
+        return self.__batchrecv_resp2msg__(resp)
+
     def consume_message_orderly(self, batch_size=1, wait_seconds=-1):
         """ 顺序消费消息,拿到的消息可能是多个分区的（对于分区顺序）一个分区的内的消息一定是顺序的
             对于顺序消费，如果一个分区内的消息只要有没有被确认消费 {ack_message} 成功，则对于这个分区在NextConsumeTime后还会消费到相同的消息
@@ -76,6 +109,32 @@ class MQConsumer:
         self.debuginfo(resp)
         return self.__batchrecv_resp2msg__(resp)
 
+    async def async_consume_message_orderly(self, batch_size=1, wait_seconds=-1):
+        """ 顺序消费消息,拿到的消息可能是多个分区的（对于分区顺序）一个分区的内的消息一定是顺序的
+            对于顺序消费，如果一个分区内的消息只要有没有被确认消费 {ack_message} 成功，则对于这个分区在NextConsumeTime后还会消费到相同的消息
+            对于一个分区，只有所有消息确认消费成功才能消费下一批消息
+
+            @type batch_size: int
+            @param batch_size: 本次请求最多获取的消息条数，1~16
+
+            @type wait_seconds: int
+            @param wait_seconds: 本次请求的长轮询时间，单位：秒，1～30
+
+            @rtype: list of Message object
+            @return 多条消息的属性，包含消息的基本属性、下次可消费时间和临时句柄
+
+            @note: Exception
+            :: MQClientParameterException  参数格式异常
+            :: MQClientNetworkException    网络异常
+            :: MQServerException           处理异常
+        """
+        req = ConsumeMessageRequest(self.instance_id, self.topic_name, self.consumer, batch_size, self.message_tag, wait_seconds)
+        req.set_order()
+        resp = ConsumeMessageResponse()
+        await self.mq_client.async_consume_message(req, resp)
+        self.debuginfo(resp)
+        return self.__batchrecv_resp2msg__(resp)
+
     def ack_message(self, receipt_handle_list):
         """确认消息消费成功，如果未在300秒内确认则认为消息消费失败，通过consume_message能再次收到改消息
 
@@ -90,6 +149,22 @@ class MQConsumer:
         req = AckMessageRequest(self.instance_id, self.topic_name, self.consumer, receipt_handle_list)
         resp = AckMessageResponse()
         self.mq_client.ack_message(req, resp)
+        self.debuginfo(resp)
+
+    async def async_ack_message(self, receipt_handle_list):
+        """确认消息消费成功，如果未在300秒内确认则认为消息消费失败，通过consume_message能再次收到改消息
+
+            @type receipt_handle_list: list, size: 1~16
+            @param receipt_handle_list: consume_message返回的多条消息的临时句柄
+
+            @note: Exception
+            :: MQClientParameterException  参数格式异常
+            :: MQClientNetworkException    网络异常
+            :: MQServerException           处理异常
+        """
+        req = AckMessageRequest(self.instance_id, self.topic_name, self.consumer, receipt_handle_list)
+        resp = AckMessageResponse()
+        await self.mq_client.async_ack_message(req, resp)
         self.debuginfo(resp)
 
     def debuginfo(self, resp):

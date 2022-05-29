@@ -1,4 +1,5 @@
 # coding=utf-8
+from contextlib import asynccontextmanager
 
 from .mq_request import *
 from .mq_tool import *
@@ -43,6 +44,36 @@ class MQProducer:
                                     msg_properties_str)
         resp = PublishMessageResponse()
         self.mq_client.publish_message(req, resp)
+        self.debuginfo(resp)
+        return self.__publish_resp2msg__(resp)
+
+    @asynccontextmanager
+    async def async_session(self):
+        await self.mq_client.start_async_session()
+        try:
+            yield
+        finally:
+            await self.mq_client.close_async_session()
+
+    async def async_publish_message(self, message):
+        """ 发送消息
+
+            @type message: TopicMessage object
+            @param message: 发布的TopicMessage object
+
+            @rtype: TopicMessage object
+            @return: 消息发布成功的返回属性，包含MessageId和MessageBodyMD5
+
+            @note: Exception
+            :: MQClientParameterException  参数格式异常
+            :: MQClientNetworkException    网络异常
+            :: MQServerException           处理异常
+        """
+        msg_properties_str = MQUtils.map_to_string(message.properties)
+        req = PublishMessageRequest(self.instance_id, self.topic_name, message.message_body, message.message_tag,
+                                    msg_properties_str)
+        resp = PublishMessageResponse()
+        await self.mq_client.async_publish_message(req, resp)
         self.debuginfo(resp)
         return self.__publish_resp2msg__(resp)
 
@@ -159,6 +190,30 @@ class MQTransProducer(MQProducer):
         self.debuginfo(resp)
         return self.__batchrecv_resp2msg__(resp)
 
+    async def async_consume_half_message(self, batch_size=1, wait_seconds=-1):
+        """ 消费事务半消息
+
+            @type batch_size: int
+            @param batch_size: 本次请求最多获取的消息条数，1~16
+
+            @type wait_seconds: int
+            @param wait_seconds: 本次请求的长轮询时间，单位：秒，1～30
+
+            @rtype: list of Message object
+            @return 多条事务半消息消息，包含消息的基本属性、下次可消费时间和临时句柄
+
+            @note: Exception
+            :: MQClientParameterException  参数格式异常
+            :: MQClientNetworkException    网络异常
+            :: MQServerException           处理异常
+        """
+        req = ConsumeMessageRequest(self.instance_id, self.topic_name, self.group_id, batch_size, "", wait_seconds)
+        req.set_trans_pop()
+        resp = ConsumeMessageResponse()
+        await self.mq_client.async_consume_message(req, resp)
+        self.debuginfo(resp)
+        return self.__batchrecv_resp2msg__(resp)
+
     def commit(self, receipt_handle):
         """提交事务消息
 
@@ -176,6 +231,23 @@ class MQTransProducer(MQProducer):
         self.mq_client.ack_message(req, resp)
         self.debuginfo(resp)
 
+    async def async_commit(self, receipt_handle):
+        """提交事务消息
+
+            @type receipt_handle: basestring
+            @param receipt_handle: consume_half_message返回的单条消息句柄或者是发送事务消息返回的句柄
+
+            @note: Exception
+            :: MQClientParameterException  参数格式异常
+            :: MQClientNetworkException    网络异常
+            :: MQServerException           处理异常
+        """
+        req = AckMessageRequest(self.instance_id, self.topic_name, self.group_id, [receipt_handle])
+        req.set_trans_commit()
+        resp = AckMessageResponse()
+        await self.mq_client.async_ack_message(req, resp)
+        self.debuginfo(resp)
+
     def rollback(self, receipt_handle):
         """取消事务消息
 
@@ -191,6 +263,23 @@ class MQTransProducer(MQProducer):
         req.set_trans_rollback()
         resp = AckMessageResponse()
         self.mq_client.ack_message(req, resp)
+        self.debuginfo(resp)
+
+    async def async_rollback(self, receipt_handle):
+        """取消事务消息
+
+            @type receipt_handle: basestring
+            @param receipt_handle: consume_half_message返回的单条消息句柄或者是发送事务消息返回的句柄
+
+            @note: Exception
+            :: MQClientParameterException  参数格式异常
+            :: MQClientNetworkException    网络异常
+            :: MQServerException           处理异常
+        """
+        req = AckMessageRequest(self.instance_id, self.topic_name, self.group_id, [receipt_handle])
+        req.set_trans_rollback()
+        resp = AckMessageResponse()
+        await self.mq_client.async_ack_message(req, resp)
         self.debuginfo(resp)
 
     def __batchrecv_resp2msg__(self, resp):
